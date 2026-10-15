@@ -210,10 +210,16 @@ export default function App() {
       for (const file of valid) {
         let folderId = baseFolder
         if (directory && file.webkitRelativePath) {
+          // FileList.webkitRelativePath starts with the selected directory name.
+          // Keeping every component recreates the root and all nested folders.
           const parts = file.webkitRelativePath.split('/').slice(0, -1)
           for (let i = 0; i < parts.length; i++) {
             const key = parts.slice(0, i + 1).join('/')
-            if (!paths.has(key)) { const folder = { id: uid(), name: parts[i], parentId: folderId, createdAt: Date.now() }; newFolders.push(folder); paths.set(key, folder.id) }
+            if (!paths.has(key)) {
+              const folder = { id: uid(), name: parts[i].replace(/[\u0000-\u001f]/g, '').slice(0, 180) || 'Pasta sem nome', parentId: folderId, createdAt: Date.now() }
+              newFolders.push(folder)
+              paths.set(key, folder.id)
+            }
             folderId = paths.get(key)!
           }
         }
@@ -221,7 +227,9 @@ export default function App() {
       }
       update(state => ({ ...state, documents: [...state.documents, ...newDocs], folders: [...state.folders, ...newFolders], activeId: newDocs[0].id }))
       setOpenTabs(tabs => [...tabs, newDocs[0].id].slice(-6)); setReading(false)
-      setToast(`${newDocs.length} documento${newDocs.length > 1 ? 's importados' : ' importado'} para sua biblioteca.`)
+      setToast(directory
+        ? `${newDocs.length} documento${newDocs.length === 1 ? '' : 's'} importado${newDocs.length === 1 ? '' : 's'} e organizado${newDocs.length === 1 ? '' : 's'} em ${newFolders.length} pasta${newFolders.length === 1 ? '' : 's'}.`
+        : `${newDocs.length} documento${newDocs.length === 1 ? '' : 's'} importado${newDocs.length === 1 ? '' : 's'} para sua biblioteca.`)
     } catch { setToast('Não foi possível importar. Seus documentos existentes foram mantidos.') }
   }
   async function restoreBackup(file?: File) {

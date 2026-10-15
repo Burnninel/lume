@@ -8,7 +8,7 @@ Um espaço tranquilo para escrever, ler e organizar ideias em Markdown. Aplicaç
 
 - Editor visual ao vivo, código Markdown e visão dividida.
 - **Modo leitura pelo ícone de olho**, modo foco, temas claro/escuro/sistema e ajuste de fonte.
-- Importação de `.md`, `.markdown` e `.txt`, múltiplos arquivos, arrastar e soltar e importação de pastas.
+- Importação de `.md`, `.markdown` e `.txt`, múltiplos arquivos, arrastar e soltar e importação de pastas. Ao selecionar uma pasta, sua raiz e toda a hierarquia de subpastas são recriadas na biblioteca.
 - Biblioteca persistente com pastas e subpastas, renomeação, movimentação, duplicação, favoritos, recentes e lixeira recuperável.
 - Busca por nome/conteúdo, localizar e substituir, abas de documentos e sumário clicável.
 - Títulos, listas, tarefas, tabelas, citações, links, imagens, código com destaque, fórmulas KaTeX e diagramas Mermaid na leitura.
@@ -61,6 +61,7 @@ O projeto está preparado para publicação; nenhum repositório remoto ou site 
 - Fechar a aba ou reiniciar o navegador mantém os documentos. Limpar dados do site, janela anônima, políticas de descarte ou perda do dispositivo podem removê-los. Use **Preferências → Baixar backup** regularmente.
 - A importação cria uma cópia local. Editar no Lume não sobrescreve o arquivo original no computador.
 - Importar um backup **adiciona** documentos e pastas com novos identificadores; não substitui a biblioteca existente. Preferências atuais são mantidas nesse caso. A recuperação após erro de abertura preserva o snapshot original antes de substituí-lo.
+- Ao importar uma pasta, o Lume cria na biblioteca uma pasta com o nome da raiz selecionada. Cada subpasta e arquivo Markdown mantém sua posição relativa dentro dessa raiz; arquivos de outros tipos são ignorados.
 - Uma aba por vez pode editar. Outras abas abrem para leitura e exportação; feche a aba de edição e recarregue para assumir a escrita.
 - Importação: até 9 MB por arquivo. Limites internos: 10 milhões de caracteres por documento, 25 milhões na biblioteca, 10 mil documentos e 2 mil pastas. A quota efetiva depende do navegador.
 - Imagens escolhidas pelo seletor são incorporadas ao Markdown como data URLs e consomem a quota. Referências relativas de imagens em arquivos importados não copiam automaticamente os arquivos de imagem; use o seletor para incorporá-las ou URLs públicas.
