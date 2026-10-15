@@ -1,0 +1,195 @@
+.lume-editor {
+  position: relative;
+  min-height: 420px;
+  width: 100%;
+}
+
+.lume-editor .milkdown {
+  --crepe-font-default: var(--font-editor, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --crepe-font-title: var(--font-editor, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --crepe-font-code: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  --crepe-color-background: var(--paper, #fffefa);
+  --crepe-color-on-background: var(--text, #30352f);
+  --crepe-color-surface: var(--surface, #f4f3ed);
+  --crepe-color-surface-low: var(--surface, #f4f3ed);
+  --crepe-color-on-surface: var(--text, #30352f);
+  --crepe-color-on-surface-variant: var(--muted, #85887e);
+  --crepe-color-outline: var(--border, #e7e7df);
+  --crepe-color-primary: var(--accent, #68825a);
+  --crepe-color-secondary: var(--accent-soft, #e9eedf);
+  --crepe-color-on-secondary: var(--text, #30352f);
+  --crepe-color-inverse: var(--text, #30352f);
+  --crepe-color-on-inverse: var(--paper, #fffefa);
+  --crepe-color-inline-code: var(--accent, #68825a);
+  --crepe-color-error: #b94b4b;
+  --crepe-color-hover: var(--hover, #efeee7);
+  --crepe-color-selected: var(--accent-soft, #e9eedf);
+  --crepe-color-inline-area: var(--surface, #f4f3ed);
+  color: var(--text, #30352f);
+  background: transparent;
+}
+
+.lume-editor .milkdown > .ProseMirror {
+  padding: 0 0 100px;
+  min-height: 420px;
+  outline: none;
+  font-family: var(--font-editor, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: var(--editor-font-size, 16px);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  color: var(--text, #30352f);
+}
+
+.markdown-body {
+  font-family: var(--font-editor, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  font-size: var(--editor-font-size, 16px);
+  line-height: 1.85;
+  overflow-wrap: anywhere;
+  color: var(--text, #30352f);
+}
+
+.markdown-body > :first-child,
+.lume-editor .milkdown > .ProseMirror > :first-child { margin-top: 0; }
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3,
+.markdown-body h4, .markdown-body h5, .markdown-body h6,
+.lume-editor .milkdown .ProseMirror h1, .lume-editor .milkdown .ProseMirror h2,
+.lume-editor .milkdown .ProseMirror h3, .lume-editor .milkdown .ProseMirror h4,
+.lume-editor .milkdown .ProseMirror h5, .lume-editor .milkdown .ProseMirror h6 {
+  font-family: inherit;
+  font-weight: 650;
+  color: var(--text, #30352f);
+  letter-spacing: -.035em;
+  line-height: 1.3;
+  margin: 1.65em 0 .65em;
+  scroll-margin-top: 90px;
+}
+
+.markdown-body h1, .lume-editor .milkdown .ProseMirror h1 {
+  font-size: 2.25em;
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -.045em;
+  margin-bottom: .72em;
+}
+.markdown-body h2, .lume-editor .milkdown .ProseMirror h2 { font-size: 1.4em; margin-top: 1.9em; }
+.markdown-body h3, .lume-editor .milkdown .ProseMirror h3 { font-size: 1.15em; }
+.markdown-body h4, .lume-editor .milkdown .ProseMirror h4 { font-size: 1.05em; }
+.markdown-body h5, .lume-editor .milkdown .ProseMirror h5,
+.markdown-body h6, .lume-editor .milkdown .ProseMirror h6 { font-size: 1em; }
+
+.markdown-body p, .lume-editor .milkdown .ProseMirror p { margin: .8em 0; line-height: 1.85; }
+.markdown-body strong, .lume-editor .milkdown .ProseMirror strong { font-weight: 650; }
+.markdown-body a, .lume-editor .milkdown .ProseMirror a {
+  color: var(--accent, #68825a);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.markdown-body blockquote, .lume-editor .milkdown .ProseMirror blockquote {
+  margin: 1.4em 0;
+  padding: .3em 1.35em;
+  border-left: 3px solid var(--accent, #68825a);
+  background: var(--quote-bg, #f2f4ed);
+  color: var(--text-secondary, #72786a);
+  border-radius: 0 6px 6px 0;
+  font-style: normal;
+}
+.markdown-body blockquote p, .lume-editor .milkdown .ProseMirror blockquote p { margin: .6em 0; }
+.markdown-body ul, .markdown-body ol { padding-left: 1.55em; margin: .9em 0; }
+.markdown-body li { padding-left: .15em; margin: .3em 0; }
+.markdown-body li > p { margin: .25em 0; }
+.markdown-body li::marker { color: var(--accent, #68825a); }
+.markdown-body .contains-task-list { list-style: none; padding-left: .2em; }
+.markdown-body .task-list-item { display: block; padding-left: 0; }
+.markdown-body .task-list-item > input { accent-color: var(--accent, #68825a); margin: 0 .6em 0 0; width: 14px; height: 14px; vertical-align: middle; }
+
+.markdown-body hr, .lume-editor .milkdown .ProseMirror hr {
+  border: 0;
+  height: 1px;
+  background: var(--border, #e7e7df);
+  margin: 2em 0;
+}
+.markdown-body :not(pre) > code, .lume-editor .milkdown .ProseMirror p > code,
+.lume-editor .milkdown .ProseMirror li > code {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  font-size: .83em;
+  font-weight: 450;
+  padding: .18em .38em;
+  background: var(--code-inline-bg, #eff0e9);
+  color: var(--accent, #68825a);
+  border-radius: 4px;
+  white-space: break-spaces;
+}
+
+.markdown-body table, .lume-editor .milkdown .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: .88em;
+  line-height: 1.6;
+  margin: 1.2em 0;
+}
+.markdown-body table { display: block; overflow-x: auto; }
+.markdown-body th, .markdown-body td, .lume-editor .milkdown .ProseMirror th,
+.lume-editor .milkdown .ProseMirror td {
+  border: 1px solid var(--border, #e7e7df);
+  padding: .72em .95em;
+  text-align: left;
+}
+.markdown-body th, .lume-editor .milkdown .ProseMirror th {
+  background: var(--surface, #f4f3ed);
+  font-weight: 600;
+}
+.lume-editor .milkdown .ProseMirror td p, .lume-editor .milkdown .ProseMirror th p { margin: 0; }
+.markdown-body img, .lume-editor .milkdown .ProseMirror img { max-width: 100%; height: auto; border-radius: 8px; }
+.markdown-body .katex-display { overflow-x: auto; overflow-y: hidden; padding: .5em 0; }
+
+.reading-code-block {
+  border: 1px solid var(--border, #e7e7df);
+  border-radius: 9px;
+  background: var(--code-bg, #f7f7f2);
+  margin: 1.5em 0;
+  overflow: hidden;
+}
+.reading-code-topbar { display: flex; justify-content: space-between; padding: 9px 16px; align-items: center; border-bottom: 1px solid var(--border, #e7e7df); color: var(--muted, #85887e); font: 11px/1.4 'Inter', system-ui, sans-serif; }
+.reading-code-topbar span { text-transform: uppercase; letter-spacing: .08em; }
+.reading-code-topbar button { color: inherit; font: inherit; background: transparent; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; }
+.reading-code-topbar button:hover { color: var(--text, #30352f); background: var(--hover, #efeee7); }
+.reading-code-block pre { margin: 0; padding: 18px 20px; overflow-x: auto; font: 12.5px/1.85 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; white-space: pre; tab-size: 2; }
+.reading-code-block code { color: var(--text, #30352f); background: transparent; font: inherit; padding: 0; }
+.reading-code-block .hljs-comment, .reading-code-block .hljs-quote { color: #89907e; font-style: italic; }
+.reading-code-block .hljs-keyword, .reading-code-block .hljs-selector-tag, .reading-code-block .hljs-literal { color: #9873a4; }
+.reading-code-block .hljs-string, .reading-code-block .hljs-addition, .reading-code-block .hljs-attr { color: #71874d; }
+.reading-code-block .hljs-number, .reading-code-block .hljs-symbol, .reading-code-block .hljs-bullet { color: #b68d57; }
+.reading-code-block .hljs-title, .reading-code-block .hljs-section, .reading-code-block .hljs-built_in { color: #6a91a1; }
+.reading-code-block .hljs-deletion { color: #c87878; }
+
+.lume-editor .milkdown .milkdown-code-block { border: 1px solid var(--border, #e7e7df); border-radius: 9px; margin: 1.5em 0; background: var(--code-bg, #f7f7f2); }
+.lume-editor .milkdown .milkdown-code-block .cm-editor { font-size: 12.5px; background: transparent; }
+.lume-editor .milkdown .milkdown-code-block .cm-scroller { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
+.lume-editor .milkdown .milkdown-toolbar { z-index: 30; }
+.lume-editor .milkdown .milkdown-slash-menu { z-index: 40; }
+.lume-editor .milkdown .milkdown-table-block { margin: 1.3em 0; }
+.lume-editor .milkdown .ProseMirror li p { line-height: 1.85; }
+.lume-editor .milkdown .ProseMirror ::selection, .markdown-body ::selection { background: var(--accent-soft, #e9eedf); }
+.editor-loading { position: absolute; top: 0; font-size: 13px; color: var(--muted, #85887e); padding: 16px 0; }
+.editor-error { color: #a74e43; background: #fff0eb; font-size: 13px; padding: 16px; border-radius: 8px; line-height: 1.7; }
+.mermaid-diagram { margin: 1.5em 0; padding: 24px; background: #fcfcf8; border: 1px solid var(--border, #e7e7df); border-radius: 9px; overflow-x: auto; text-align: center; }
+.mermaid-diagram svg { max-width: 100%; height: auto; }
+.diagram-loading, .diagram-fallback { margin: 1.5em 0; border: 1px solid var(--border, #e7e7df); background: var(--surface, #f4f3ed); padding: 20px; border-radius: 8px; color: var(--muted, #85887e); font-size: 13px; }
+.diagram-fallback pre { overflow-x: auto; white-space: pre; font-size: 12px; }
+
+@media (max-width: 720px) {
+  .markdown-body h1, .lume-editor .milkdown .ProseMirror h1 { font-size: 1.95em; }
+  .lume-editor .milkdown .milkdown-block-handle { transform: translateX(4px); }
+  .markdown-body th, .markdown-body td { min-width: 100px; }
+  .mermaid-diagram { padding: 12px; }
+}
+
+@media print {
+  .reading-code-topbar button { display: none; }
+  .markdown-body { font-size: 11pt; color: #111; }
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { break-after: avoid; }
+  .markdown-body img, .markdown-body table, .reading-code-block, .mermaid-diagram { break-inside: avoid; }
+  .markdown-body a { color: inherit; }
+}
