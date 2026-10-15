@@ -18,3 +18,9 @@
 @media(hover:none){.row-more{opacity:1}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 @media print{.sidebar,.topbar,.document-tabs,.editor-toolbar,.outline-panel,.statusbar,.document-meta,.document-file-label,.document-end,.toast,.warning-banner,.mobile-backdrop{display:none!important}.app-shell,.main-workspace,.editor-layout,.document-scroll{display:block!important;overflow:visible!important;height:auto!important;min-height:0!important;background:white!important;padding:0!important}.reader,.markdown-body{max-width:100%!important;color:#222!important;font-size:12pt!important}.markdown-body h1,.markdown-body h2,.markdown-body h3{break-after:avoid}.markdown-body pre,.markdown-body table,.markdown-body img{break-inside:avoid}.markdown-body a{color:#222!important}@page{margin:20mm}}
+/* Keep both import paths visible in the library, including on narrow sidebars. */
+.import-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.import-actions .import-button{height:38px;min-width:0;padding:0 7px;justify-content:center;gap:6px}
+.import-actions .import-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty-import-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.empty-import-actions>button{min-width:160px}
