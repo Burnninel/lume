@@ -24,3 +24,5 @@
 .import-actions .import-button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .empty-import-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .empty-import-actions>button{min-width:160px}
+:root{--surface:#f4f3ed;--code-inline-bg:#eff0e9;--code-bg:#f7f7f2;--accent-soft:#e9eedf;--quote-bg:#f2f4ed;--text-secondary:#72786a}
+:root[data-theme=dark]{--surface:#28332c;--code-inline-bg:#29382f;--code-bg:#202923;--accent-soft:#314637;--quote-bg:#222d26;--text-secondary:#bdc9bf}
