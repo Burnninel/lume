@@ -21,6 +21,7 @@ import '@milkdown/crepe/theme/common/style.css'
 import '@milkdown/crepe/theme/frame.css'
 import './editor.css'
 import { splitFrontMatter } from '../lib/markdown'
+import { codeTheme } from './codeTheme'
 
 export interface EditorApi {
   insert: (text: string) => void
@@ -150,6 +151,7 @@ function CoreMarkdownEditor({ documentId, value, onChange, onReady, onError }: M
           codeLabel: 'Código', linkLabel: 'Link', latexLabel: 'Fórmula',
         },
         [Crepe.Feature.CodeMirror]: {
+          theme: codeTheme,
           searchPlaceholder: 'Buscar linguagem…', noResultText: 'Nenhuma linguagem encontrada',
           copyText: 'Copiar', previewLabel: 'Prévia',
           previewToggleText: (previewOnly) => previewOnly ? 'Editar código' : 'Ver prévia',

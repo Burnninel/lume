@@ -10,7 +10,7 @@ export default defineConfig({
     manifest: {
       name: 'Lume — espaço para suas ideias', short_name: 'Lume',
       description: 'Escreva, leia e organize seus documentos Markdown.',
-      theme_color: '#f7f8f5', background_color: '#f7f8f5', display: 'standalone',
+      theme_color: '#F7F8FA', background_color: '#F7F8FA', display: 'standalone',
       start_url: './', scope: './', lang: 'pt-BR',
       icons: [{ src: 'favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
     },

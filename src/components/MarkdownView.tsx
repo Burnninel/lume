@@ -53,13 +53,23 @@ function MermaidBlock({ source }: { source: string }) {
   const id = `lume-diagram-${useId().replace(/[^a-z\d]/gi, '')}`
   const [svg, setSvg] = useState('')
   const [error, setError] = useState(false)
+  const [theme, setTheme] = useState(() => document.documentElement.dataset.theme)
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => setTheme(document.documentElement.dataset.theme))
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     let active = true
     setError(false)
     setSvg('')
-    mermaidLoader ??= import('mermaid').then((module) => {
-      module.default.initialize({
+    const styles = getComputedStyle(document.documentElement)
+    const color = (token: string) => styles.getPropertyValue(token).trim()
+    mermaidLoader ??= import('mermaid')
+    mermaidLoader.then(({ default: mermaid }) => {
+      mermaid.initialize({
         startOnLoad: false,
         securityLevel: 'strict',
         suppressErrorRendering: true,
@@ -68,24 +78,32 @@ function MermaidBlock({ source }: { source: string }) {
         fontFamily: 'Inter, system-ui, sans-serif',
         flowchart: { htmlLabels: false, curve: 'basis' },
         themeVariables: {
-          primaryColor: '#f0ede8',
-          primaryTextColor: '#343b36',
-          primaryBorderColor: '#a7ada4',
-          lineColor: '#71836b',
-          secondaryColor: '#e7eddf',
-          tertiaryColor: '#f8f7f3',
+          darkMode: theme === 'dark',
+          dropShadow: 'none',
+          nodeShadow: false,
+          background: color('--code-bg'),
+          primaryColor: color('--diagram-node'),
+          primaryTextColor: color('--text'),
+          primaryBorderColor: color('--control-border'),
+          lineColor: color('--muted'),
+          secondaryColor: color('--diagram-secondary'),
+          secondaryTextColor: color('--text'),
+          secondaryBorderColor: color('--control-border'),
+          tertiaryColor: color('--diagram-tertiary'),
+          tertiaryTextColor: color('--text'),
+          tertiaryBorderColor: color('--control-border'),
+          textColor: color('--text'),
+          edgeLabelBackground: color('--code-bg'),
         },
       })
-      return module
+      return mermaid.render(id, source)
     })
-    mermaidLoader
-      .then(({ default: mermaid }) => mermaid.render(id, source))
       .then(({ svg: result }) => {
         if (active) setSvg(DOMPurify.sanitize(result, { USE_PROFILES: { svg: true, svgFilters: true } }))
       })
       .catch(() => { if (active) setError(true) })
     return () => { active = false }
-  }, [id, source])
+  }, [id, source, theme])
 
   if (error) return <div className="diagram-fallback"><p>Revise a sintaxe do diagrama Mermaid.</p><pre><code>{source}</code></pre></div>
   // Keep the source in static HTML exports, where effects never run.

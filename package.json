@@ -13,6 +13,8 @@
     "preview:pages": "node scripts/serve-built.mjs"
   },
   "dependencies": {
+    "@codemirror/language": "6.13.1",
+    "@lezer/highlight": "1.2.5",
     "@milkdown/crepe": "7.22.3",
     "@milkdown/kit": "7.22.3",
     "dompurify": "3.4.17",

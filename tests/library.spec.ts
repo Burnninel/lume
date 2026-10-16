@@ -54,7 +54,7 @@ test('imports a Markdown file, reads it safely and exports its original text', a
   await page.getByRole('button', { name: 'Markdown', exact: true }).click()
   const markdown = '# Notas importadas\n\nTexto **importado** do computador.\n\n| Item | Estado |\n| --- | --- |\n| Anotações | Salvas |\n'
   const chooserPromise = page.waitForEvent('filechooser')
-  await page.getByRole('button', { name: 'Importar Markdown', exact: true }).click()
+  await page.getByRole('button', { name: 'Arquivos .md', exact: true }).click()
   await (await chooserPromise).setFiles({ name: 'notas-importadas.md', mimeType: 'text/markdown', buffer: Buffer.from(markdown) })
   await expect(page.getByRole('textbox', { name: 'Conteúdo Markdown' })).toHaveValue(markdown)
   await saved(page)
