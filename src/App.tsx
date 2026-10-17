@@ -23,8 +23,9 @@ function download(name: string, content: string, type = 'text/markdown;charset=u
   const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-function Logo({ small = false }: { small?: boolean }) {
-  return <div className={`brand ${small ? 'brand-small' : ''}`}><span className="brand-icon"><span /><Sparkles size={15} strokeWidth={1.5} /></span><span>lume<span className="brand-dot">.</span></span></div>
+function Logo({ onClick }: { onClick?: () => void }) {
+  const content = <><span className="brand-icon"><span /><Sparkles size={15} strokeWidth={1.5} /></span><span>lume<span className="brand-dot">.</span></span></>
+  return onClick ? <button type="button" className="brand brand-home" aria-label="Lume — voltar ao início" onClick={onClick}>{content}</button> : <div className="brand">{content}</div>
 }
 function IconButton({ label, children, onClick, active = false, disabled = false }: { label: string; children: React.ReactNode; onClick?: () => void; active?: boolean; disabled?: boolean }) {
   return <button type="button" className={`icon-button ${active ? 'active' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}>{children}</button>
@@ -147,10 +148,37 @@ export default function App() {
   const mode = library?.settings.editorMode ?? 'live'
 
   useEffect(() => { document.title = active ? `${withoutExtension(active.name)} — Lume` : initialTitle.current }, [active?.name])
+  useEffect(() => {
+    document.querySelector('.document-tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [active?.id, reading, focus])
   function openDoc(id: string) {
     setLibrary(state => state ? { ...state, activeId: id } : state)
     setOpenTabs(tabs => [...tabs.filter(tab => tab !== id), id].slice(-6)); editor.current = null
     if (window.innerWidth < 760) settings({ sidebarVisible: false })
+  }
+  function goHome() {
+    setFilter('all'); setReading(false); setMenu(null); setModal(null); setFindOpen(false)
+    setLibrary(state => state ? { ...state, activeId: null, settings: { ...state.settings, focusMode: false, sidebarVisible: window.innerWidth >= 760 } } : state)
+    editor.current = null
+  }
+  function toggleFolder(id: string) {
+    setFilter(id)
+    setCollapsed(previous => {
+      const next = new Set(previous)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+  async function copyMarkdown(id: string) {
+    const doc = latest.current?.documents.find(item => item.id === id)
+    if (!doc) return
+    setMenu(null)
+    try {
+      await navigator.clipboard.writeText(doc.content)
+      setToast('Markdown completo copiado.')
+    } catch {
+      setToast('Não foi possível copiar. Permita o acesso à área de transferência ou use Exportar → Markdown (.md).')
+    }
   }
   function changeContent(content: string) {
     if (!active || !canEdit || content === active.content) return
@@ -342,6 +370,7 @@ export default function App() {
   })
 
   const menus = (id: string, kind: 'doc' | 'folder') => <div className="popup-menu" onClick={event => event.stopPropagation()}>
+    {kind === 'doc' && <button onClick={() => void copyMarkdown(id)}><Copy size={15} />Copiar Markdown</button>}
     <button onClick={() => showModal(kind === 'doc' ? 'rename-doc' : 'rename-folder', id)}><FileText size={15} />Renomear</button>
     <button onClick={() => showModal(kind === 'doc' ? 'move-doc' : 'move-folder', id)}><FolderOpen size={15} />Mover para pasta</button>
     {kind === 'doc' && <button onClick={() => { const doc = documents.find(d => d.id === id)!; newDocument(`${doc.name} — cópia`, doc.content, doc.folderId); setMenu(null) }}><Copy size={15} />Duplicar</button>}
@@ -355,8 +384,7 @@ export default function App() {
     const closed = collapsed.has(folder.id)
     return <div key={folder.id} className="folder-branch">
       <div className={`folder-row ${filter === folder.id ? 'selected' : ''}`} style={{ paddingLeft: 7 + depth * 13 }} onDragOver={event => { event.preventDefault(); event.stopPropagation(); event.currentTarget.classList.add('drop-target') }} onDragLeave={event => event.currentTarget.classList.remove('drop-target')} onDrop={event => { event.preventDefault(); event.stopPropagation(); event.currentTarget.classList.remove('drop-target'); const id = event.dataTransfer.getData('application/lume-document'); if (id) { patchDoc(id, { folderId: folder.id }); setToast('Documento movido.') } }}>
-        <button className="folder-chevron" aria-label={`${closed ? 'Expandir' : 'Recolher'} ${folder.name}`} onClick={() => setCollapsed(previous => { const next = new Set(previous); if (next.has(folder.id)) next.delete(folder.id); else next.add(folder.id); return next })}>{closed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</button>
-        <button className="folder-label" onClick={() => setFilter(folder.id)}><Folder size={16} /><span>{folder.name}</span><small>{folderDocs.length}</small></button>
+        <button className="folder-label" aria-label={`${closed ? 'Expandir' : 'Recolher'} ${folder.name}`} aria-expanded={!closed} onClick={() => toggleFolder(folder.id)}><span className="folder-chevron" aria-hidden="true">{closed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}</span><Folder size={16} /><span>{folder.name}</span><small>{folderDocs.length}</small></button>
         <div className="relative"><button className="row-more" aria-label={`Opções da pasta ${folder.name}`} onClick={event => { event.stopPropagation(); setMenu(menu === folder.id ? null : folder.id) }}><Ellipsis size={15} /></button>{menu === folder.id && menus(folder.id, 'folder')}</div>
       </div>
       {!closed && <div className="folder-children">{children.map(child => renderFolder(child, depth + 1))}{folderDocs.map(doc => <button key={doc.id} className={`tree-document ${active?.id === doc.id ? 'active' : ''}`} style={{ paddingLeft: 38 + depth * 13 }} onClick={() => openDoc(doc.id)} draggable onDragStart={event => event.dataTransfer.setData('application/lume-document', doc.id)}><FileText size={14} /><span>{withoutExtension(doc.name)}</span>{doc.favorite && <Star size={11} className="favorite-star" />}</button>)}</div>}
@@ -371,7 +399,7 @@ export default function App() {
     <input ref={folderInput} type="file" aria-label="Selecionar pasta para importar" multiple hidden {...{ webkitdirectory: '', directory: '' }} onChange={event => { if (event.target.files) void importFiles(event.target.files, true); event.target.value = '' }} />
     <input ref={imageInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden onChange={event => { const file = event.target.files?.[0]; if (file) { if (file.size > 8 * 1024 * 1024) setToast('A imagem pode ter até 8 MB.'); else { const reader = new FileReader(); reader.onload = () => insert(`![${file.name.replace(/[\[\]]/g, '')}](${reader.result})`); reader.readAsDataURL(file) } } event.target.value = '' }} />
     {sidebar && !focus && <aside className="sidebar">
-      <div className="brand-row"><Logo /><IconButton label="Recolher biblioteca" onClick={() => settings({ sidebarVisible: false })}><PanelLeftClose size={17} /></IconButton></div>
+      <div className="brand-row"><Logo onClick={goHome} /><IconButton label="Recolher biblioteca" onClick={() => settings({ sidebarVisible: false })}><PanelLeftClose size={17} /></IconButton></div>
       <div className="workspace-label"><span className="workspace-avatar">M</span><div><strong>Meu espaço</strong><span>Biblioteca pessoal</span></div><span className="local-badge">LOCAL</span></div>
       <button className="search-trigger" onClick={() => showModal('search')}><Search size={16} /><span>Buscar documentos</span><kbd>Ctrl K</kbd></button>
       <button className="new-document primary-button" onClick={() => showModal('new-doc')}><Plus size={17} />Novo documento<span>↗</span></button>
@@ -401,7 +429,7 @@ export default function App() {
         {findOpen && <form className="find-bar" onSubmit={event => { event.preventDefault(); if (!findText || !active) return; const start = active.content.indexOf(findText, (source.current?.selectionEnd ?? 0)); const index = start >= 0 ? start : active.content.indexOf(findText); if (index >= 0) { source.current?.focus(); source.current?.setSelectionRange(index, index + findText.length) } else setToast('Nenhum resultado neste documento.') }}><Search size={16} /><input aria-label="Localizar no documento" placeholder="Localizar texto…" value={findText} onChange={event => setFindText(event.target.value)} autoFocus /><input aria-label="Substituir por" placeholder="Substituir por…" value={replaceText} onChange={event => setReplaceText(event.target.value)} /><button type="submit">Próximo</button><button type="button" disabled={!findText || !canEdit} onClick={() => { const count = active.content.split(findText).length - 1; changeContent(active.content.split(findText).join(replaceText)); setToast(`${count} ocorrência(s) substituída(s).`) }}>Substituir todas</button><IconButton label="Fechar busca no documento" onClick={() => setFindOpen(false)}><X size={16} /></IconButton></form>}
         <div className={`editor-layout ${!outlineVisible || focus ? 'no-outline' : ''}`}>
           <div className="document-scroll" key={active.id}>
-            <div className="document-meta"><span className="document-eyebrow"><span className="tiny-spark">✦</span>{reading ? 'TEMPO PARA LER' : 'ESPAÇO PARA SUAS IDEIAS'}</span><div><IconButton label={active.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'} active={active.favorite} onClick={() => patchDoc(active.id, { favorite: !active.favorite })}><Star size={17} fill={active.favorite ? 'currentColor' : 'none'} /></IconButton><div className="relative"><IconButton label="Mais opções do documento" onClick={() => setMenu(menu === 'active' ? null : 'active')}><Ellipsis size={19} /></IconButton>{menu === 'active' && <div className="popup-menu align-right" onClick={event => event.stopPropagation()}><button onClick={() => showModal('rename-doc', active.id)}><FileText size={15} />Renomear documento</button><button onClick={() => showModal('move-doc', active.id)}><Folder size={15} />Mover para pasta</button><button onClick={() => { newDocument(`${active.name} — cópia`, active.content, active.folderId); setMenu(null) }}><Copy size={15} />Duplicar documento</button><button className="danger" onClick={() => { patchDoc(active.id, { deletedAt: Date.now() }); setMenu(null) }}><Trash2 size={15} />Mover para a lixeira</button></div>}</div></div></div>
+            <div className="document-meta"><span className="document-eyebrow"><span className="tiny-spark">✦</span>{reading ? 'TEMPO PARA LER' : 'ESPAÇO PARA SUAS IDEIAS'}</span><div><IconButton label={active.favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'} active={active.favorite} onClick={() => patchDoc(active.id, { favorite: !active.favorite })}><Star size={17} fill={active.favorite ? 'currentColor' : 'none'} /></IconButton><div className="relative"><IconButton label="Mais opções do documento" onClick={() => setMenu(menu === 'active' ? null : 'active')}><Ellipsis size={19} /></IconButton>{menu === 'active' && <div className="popup-menu align-right" onClick={event => event.stopPropagation()}><button onClick={() => void copyMarkdown(active.id)}><Copy size={15} />Copiar Markdown</button><button onClick={() => showModal('rename-doc', active.id)}><FileText size={15} />Renomear documento</button><button onClick={() => showModal('move-doc', active.id)}><Folder size={15} />Mover para pasta</button><button onClick={() => { newDocument(`${active.name} — cópia`, active.content, active.folderId); setMenu(null) }}><Copy size={15} />Duplicar documento</button><button className="danger" onClick={() => { patchDoc(active.id, { deletedAt: Date.now() }); setMenu(null) }}><Trash2 size={15} />Mover para a lixeira</button></div>}</div></div></div>
             <div className="document-file-label"><button onClick={() => showModal('rename-doc', active.id)} title="Renomear documento">{withoutExtension(active.name)}<span>.md</span></button><span>·</span><span>{Math.max(1, Math.ceil(words / 220))} min de leitura</span></div>
             {reading || active.deletedAt || otherTab ? <article className="reader"><MarkdownView content={active.content || '# Uma página em branco\n\nEste documento ainda não tem conteúdo.'} /></article> : <div className={`writing-area ${mode === 'split' ? 'split-editor' : ''}`}>{mode === 'live' ? <MarkdownEditor documentId={active.id} value={active.content} onChange={changeContent} onReady={api => { editor.current = api }} /> : <textarea ref={source} className="source-editor" aria-label="Conteúdo Markdown" spellCheck={false} value={active.content} placeholder="# Sua próxima ideia começa aqui…" onChange={event => changeContent(event.target.value)} onKeyDown={event => { if (event.key === 'Tab') { event.preventDefault(); insert('  ') } }} />}{mode === 'split' && <div className="split-preview"><MarkdownView content={active.content} /></div>}</div>}
             <div className="document-end"><span /><Sparkles size={16} /><span /></div>

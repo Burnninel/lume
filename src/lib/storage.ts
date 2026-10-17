@@ -1,5 +1,6 @@
 import { LIBRARY_LIMITS, validateLibrary, type DocumentRecord, type LibraryState } from './library'
 import { createSeedLibrary } from './seed'
+import { migrateStarterContent } from './starterContent'
 
 export type { DocumentRecord, FolderRecord, LibraryState } from './library'
 
@@ -193,7 +194,7 @@ export function loadLibrary(): Promise<LibraryState> {
       return initial
     }
     try {
-      return mergePendingDrafts(decodeEnvelope(stored))
+      return migrateStarterContent(mergePendingDrafts(decodeEnvelope(stored)))
     } catch (cause) {
       throw new LibraryStorageError('A biblioteca salva não pôde ser validada. Os dados originais foram preservados. Você pode recuperar a cópia anterior ou importar um backup.', cause)
     }

@@ -17,6 +17,8 @@ export interface FolderRecord {
 }
 
 export interface LibraryState {
+  /** Present after the original sample collection has been retired. */
+  starterContentVersion?: 2
   documents: DocumentRecord[]
   folders: FolderRecord[]
   activeId: string | null
@@ -174,6 +176,7 @@ export function validateLibrary(value: unknown): LibraryState {
     invalid('O tamanho da fonte deve estar entre 12 e 32.')
   }
   return {
+    ...(source.starterContentVersion === 2 ? { starterContentVersion: 2 as const } : {}),
     documents,
     folders,
     activeId,

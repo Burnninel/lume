@@ -258,8 +258,13 @@ kbd {
   color: var(--accent);
 }
 
-.brand-small {
-  font-size: 27px;
+.brand-home {
+  padding: 0;
+  border-radius: 5px;
+}
+
+.brand-home:hover {
+  opacity: .85;
 }
 
 .brand-row>.icon-button {
@@ -464,7 +469,7 @@ kbd {
   display: grid;
   place-items: center;
   width: 19px;
-  height: 28px;
+  margin-right: -5px;
   flex-shrink: 0;
   color: var(--muted);
   padding: 0;
@@ -478,7 +483,7 @@ kbd {
   flex: 1;
   text-align: left;
   font-size: 11px;
-  padding: 6px 5px;
+  padding: 8px 5px 8px 0;
   color: var(--muted);
 }
 
@@ -827,11 +832,15 @@ kbd {
   align-items: center;
   max-width: 75%;
   height: 100%;
-  overflow: auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .document-tab {
   height: 100%;
+  flex: 0 0 auto;
+  border-top: 2px solid transparent;
   border-left: 1px solid transparent;
   border-right: 1px solid transparent;
   display: flex;
@@ -844,7 +853,6 @@ kbd {
   background: var(--bg);
   border-color: var(--border);
   border-top: 2px solid var(--accent);
-  margin-bottom: -1px;
 }
 
 .document-tab>button:first-child {

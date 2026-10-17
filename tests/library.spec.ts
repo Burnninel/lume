@@ -79,6 +79,8 @@ test('imports a Markdown file, reads it safely and exports its original text', a
 
 test('organizes nested folders, blocks cycles and moves documents without losing text', async ({ page }) => {
   await openLibrary(page)
+  await createFolder(page, 'Projetos')
+  await page.getByRole('navigation', { name: 'Biblioteca' }).getByRole('button', { name: /^Todos os documentos/ }).click()
   await createFolder(page, 'Pesquisa')
   await createFolder(page, 'Fontes')
   await createDocument(page, 'Entrevista', '# Entrevista\n\nUma fonte importante.')
@@ -130,9 +132,11 @@ test('favorites and trash persist, and restoring a document retains its content'
 
 test('exports a complete backup and imports it without overwriting existing documents', async ({ page }) => {
   await openLibrary(page)
+  await createFolder(page, 'Meus arquivos')
   await createDocument(page, 'Documento protegido', '# Backup\n\nConteúdo que deve voltar.')
   await page.getByRole('button', { name: 'Adicionar aos favoritos', exact: true }).click()
   await saved(page)
+  await page.getByRole('navigation', { name: 'Biblioteca' }).getByRole('button', { name: /^Todos os documentos/ }).click()
   const before = await page.locator('.document-list .document-item').count()
   await page.getByRole('button', { name: 'Preferências', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Do seu jeito' })
@@ -144,13 +148,14 @@ test('exports a complete backup and imports it without overwriting existing docu
   expect(backup.format).toBe('lume-backup')
   expect(backup.version).toBe(1)
   expect(backup.library.documents.find((document: { name: string }) => document.name === 'Documento protegido')).toMatchObject({ content: '# Backup\n\nConteúdo que deve voltar.', favorite: true })
-  expect(backup.library.folders.map((folder: { name: string }) => folder.name)).toEqual(expect.arrayContaining(['Pessoal', 'Projetos', 'Referências']))
+  expect(backup.library.folders.map((folder: { name: string }) => folder.name)).toEqual(['Meus arquivos'])
 
   const chooserPromise = page.waitForEvent('filechooser')
   await dialog.getByRole('button', { name: 'Importar backup', exact: true }).click()
   await (await chooserPromise).setFiles({ name: 'lume-backup.json', mimeType: 'application/json', buffer: Buffer.from(backupText) })
   await expect(page.getByRole('status')).toContainText('Backup importado')
   await dialog.getByRole('button', { name: 'Fechar diálogo', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Biblioteca' }).getByRole('button', { name: /^Todos os documentos/ }).click()
   await expect(page.locator('.document-list .document-item')).toHaveCount(before * 2)
   await expect(page.locator('.document-list .document-item').filter({ hasText: 'Documento protegido' })).toHaveCount(2)
   await saved(page)

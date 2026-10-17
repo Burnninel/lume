@@ -2,7 +2,11 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { canMoveFolder, getFolderDescendants, parseOutline, uniqueName, validateLibrary } from './library'
 import { createSeedLibrary } from './seed'
+import { createLegacySeedLibrary } from './legacySeed'
+import { migrateStarterContent } from './starterContent'
 import { exportBackup, importBackup, loadLibrary, loadPreviousLibrary, restoreLibrary, saveLibrary, savePendingDraft } from './storage'
+
+const createPopulatedLibrary = (now: number) => ({ ...createLegacySeedLibrary(now), starterContentVersion: 2 as const })
 
 beforeEach(async () => {
   const values = new Map<string, string>()
@@ -21,51 +25,110 @@ beforeEach(async () => {
 
 afterEach(() => { vi.unstubAllGlobals() })
 
+describe('starter content', () => {
+  it('starts with one introduction at the root and no folders', async () => {
+    const initial = createSeedLibrary(100)
+    expect(initial.documents).toHaveLength(1)
+    expect(initial.documents[0]).toMatchObject({ id: 'welcome', folderId: null })
+    expect(initial.folders).toEqual([])
+    expect((await loadLibrary()).documents).toHaveLength(1)
+    expect(validateLibrary(initial)).toEqual(initial)
+  })
+
+  it('retires untouched legacy samples and keeps a recoverable previous snapshot', async () => {
+    const legacy = createLegacySeedLibrary(100)
+    legacy.activeId = 'markdown-guide'
+    await saveLibrary(legacy)
+    const migrated = await loadLibrary()
+    expect(migrated.documents).toEqual([legacy.documents[0]])
+    expect(migrated.folders).toEqual([])
+    expect(migrated.activeId).toBe('welcome')
+    await saveLibrary(migrated)
+    expect(await loadPreviousLibrary()).toEqual(legacy)
+    expect(await loadLibrary()).toEqual(migrated)
+  })
+
+  it.each([
+    { content: '# Minhas próprias notas' },
+    { name: 'Guia personalizado' },
+    { folderId: null },
+    { favorite: true },
+    { deletedAt: 200 },
+    { updatedAt: 200 },
+  ])('preserves a sample the user has changed: %j', changes => {
+    const legacy = createLegacySeedLibrary(100)
+    Object.assign(legacy.documents[1], changes)
+    const migrated = migrateStarterContent(legacy)
+    expect(migrated.documents).toContainEqual(legacy.documents[1])
+    if (legacy.documents[1].folderId) expect(migrated.folders).toContainEqual(legacy.folders[0])
+  })
+
+  it('keeps renamed folders, nested folders and personal documents, and runs only once', () => {
+    const legacy = createLegacySeedLibrary(100)
+    legacy.folders[0].name = 'Minha pasta'
+    legacy.folders.push({ id: 'child', name: 'Filha', parentId: 'projetos', createdAt: 200 })
+    legacy.documents.push({ ...legacy.documents[0], id: 'mine', name: 'Minhas notas', folderId: 'referencias' })
+    const migrated = migrateStarterContent(legacy)
+    expect(migrated.folders).toEqual(legacy.folders)
+    expect(migrated.documents.map(doc => doc.id)).toEqual(['welcome', 'mine'])
+    migrated.documents = migrated.documents.filter(doc => doc.id !== 'mine')
+    expect(migrateStarterContent(migrated).folders).toEqual(legacy.folders)
+  })
+
+  it('recovers last-minute edits before deciding whether an example is untouched', async () => {
+    await saveLibrary(createLegacySeedLibrary(100))
+    savePendingDraft({ id: 'workspace-guide', content: '# Última edição', updatedAt: 200 })
+    const loaded = await loadLibrary()
+    expect(loaded.documents.find(doc => doc.id === 'workspace-guide')?.content).toBe('# Última edição')
+    expect(loaded.folders.map(folder => folder.id)).toContain('pessoal')
+  })
+})
+
 describe('portable backups', () => {
   it('round-trips documents, folders, preferences, favorites and deleted documents', () => {
-    const library = createSeedLibrary(100)
+    const library = createPopulatedLibrary(100)
     library.documents[1].deletedAt = 200
     library.settings.theme = 'dark'
     expect(importBackup(exportBackup(library))).toEqual(library)
   })
 
   it('rejects an unsupported version without accepting its data', () => {
-    const backup = JSON.parse(exportBackup(createSeedLibrary(100)))
+    const backup = JSON.parse(exportBackup(createPopulatedLibrary(100)))
     backup.version = 999
     expect(() => importBackup(JSON.stringify(backup))).toThrow('versão')
     expect(() => importBackup('{broken')).toThrow('JSON')
   })
 
   it('rejects duplicated ids, missing folders and invalid active document pointers', () => {
-    const duplicate = createSeedLibrary(100)
+    const duplicate = createPopulatedLibrary(100)
     duplicate.documents[1].id = duplicate.documents[0].id
     expect(() => validateLibrary(duplicate)).toThrow('repetidos')
-    const missing = createSeedLibrary(100)
+    const missing = createPopulatedLibrary(100)
     missing.documents[0].folderId = 'absent'
     expect(() => validateLibrary(missing)).toThrow('não foi encontrada')
-    const dangling = createSeedLibrary(100)
+    const dangling = createPopulatedLibrary(100)
     dangling.activeId = 'absent'
     expect(() => validateLibrary(dangling)).toThrow('não foi encontrado')
-    const deleted = createSeedLibrary(100)
+    const deleted = createPopulatedLibrary(100)
     deleted.documents[0].deletedAt = 200
     expect(validateLibrary(deleted).activeId).toBe(deleted.documents[0].id)
   })
 
   it('rejects folder cycles and broken parent references', () => {
-    const cyclic = createSeedLibrary(100)
+    const cyclic = createPopulatedLibrary(100)
     cyclic.folders[0].parentId = cyclic.folders[1].id
     cyclic.folders[1].parentId = cyclic.folders[0].id
     expect(() => validateLibrary(cyclic)).toThrow('ciclo')
-    const orphan = createSeedLibrary(100)
+    const orphan = createPopulatedLibrary(100)
     orphan.folders[0].parentId = 'missing'
     expect(() => validateLibrary(orphan)).toThrow('superior')
   })
 
   it('rejects oversized content and malformed preferences', () => {
-    const huge = createSeedLibrary(100)
+    const huge = createPopulatedLibrary(100)
     huge.documents[0].content = 'a'.repeat(10_000_001)
     expect(() => validateLibrary(huge)).toThrow('limite')
-    const invalid = createSeedLibrary(100)
+    const invalid = createPopulatedLibrary(100)
     invalid.settings.fontSize = Infinity
     expect(() => validateLibrary(invalid)).toThrow('fonte')
   })
@@ -82,7 +145,7 @@ describe('durable library', () => {
   })
 
   it('serializes overlapping writes and captures data at invocation time', async () => {
-    const library = createSeedLibrary(100)
+    const library = createPopulatedLibrary(100)
     library.documents[0].content = 'first'
     const first = saveLibrary(library)
     library.documents[0].content = 'second'
@@ -94,9 +157,9 @@ describe('durable library', () => {
   })
 
   it('rejects invalid writes without poisoning the queue or overwriting the library', async () => {
-    const valid = createSeedLibrary(100)
+    const valid = createPopulatedLibrary(100)
     await saveLibrary(valid)
-    const invalid = createSeedLibrary(100)
+    const invalid = createPopulatedLibrary(100)
     invalid.documents[0].folderId = 'missing'
     await expect(saveLibrary(invalid)).rejects.toThrow('inválidos')
     expect(await loadLibrary()).toEqual(valid)
@@ -106,21 +169,21 @@ describe('durable library', () => {
   })
 
   it('preserves corrupt data instead of silently resetting it or overwriting it', async () => {
-    const original = createSeedLibrary(100)
+    const original = createPopulatedLibrary(100)
     await saveLibrary(original)
     original.documents[0].content = 'new version'
     await saveLibrary(original)
     await writeRawSnapshot({ broken: true })
     await expect(loadLibrary()).rejects.toThrow('preservados')
-    await expect(saveLibrary(createSeedLibrary(100))).rejects.toThrow('preservada')
+    await expect(saveLibrary(createPopulatedLibrary(100))).rejects.toThrow('preservada')
     expect((await loadPreviousLibrary())?.documents[0].content).not.toBe('new version')
     await expect(loadLibrary()).rejects.toThrow('preservados')
   })
 
   it('allows explicit recovery while archiving the original corrupt snapshot', async () => {
-    await saveLibrary(createSeedLibrary(100))
+    await saveLibrary(createPopulatedLibrary(100))
     await writeRawSnapshot({ broken: true })
-    const recovered = createSeedLibrary(200)
+    const recovered = createPopulatedLibrary(200)
     recovered.documents[0].content = 'recovered'
     await restoreLibrary(recovered)
     expect(await loadLibrary()).toEqual(recovered)
@@ -130,7 +193,7 @@ describe('durable library', () => {
 
 describe('emergency drafts', () => {
   it('recovers newer text on load and only clears it after that text is committed', async () => {
-    const original = createSeedLibrary(100)
+    const original = createPopulatedLibrary(100)
     await saveLibrary(original)
     savePendingDraft({ id: 'welcome', content: 'last typed paragraph', updatedAt: 200 })
     // An already queued older write must not delete a newer emergency draft.
@@ -145,7 +208,7 @@ describe('emergency drafts', () => {
   })
 
   it('does not overwrite a newer saved document with an old draft or resurrect trash', async () => {
-    const original = createSeedLibrary(200)
+    const original = createPopulatedLibrary(200)
     original.documents[1].deletedAt = 300
     await saveLibrary(original)
     savePendingDraft({ id: 'welcome', content: 'obsolete text', updatedAt: 100 })
@@ -166,7 +229,7 @@ describe('emergency drafts', () => {
   })
 
   it('explicit recovery archives a malformed emergency copy before removing it', async () => {
-    const original = createSeedLibrary(100)
+    const original = createPopulatedLibrary(100)
     await saveLibrary(original)
     localStorage.setItem('lume-pending-drafts-v1', '{broken')
     await expect(loadLibrary()).rejects.toThrow('preservados')
